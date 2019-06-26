@@ -12,7 +12,7 @@ You may need to customize the codes based on the eye-tracker you are using.
 
 You need to run ET_processing.m which loads the .m data called ET_data for example which is structured as follows:
 
-The ocular data is assuemed to be converted into .mat file, e.g. with the name: ET_data 
+The ocular data is assuemed to be converted into .mat file, e.g. with the name: ET_data like the sample data in the repository.
 
 It is also assumed to containt the following data arrays (vectors):
 

@@ -19,7 +19,7 @@ load ET_data
 % EH_gaze_length = fillmissing(EH_gaze_length,'linear');
 
 % % Optional one-sample spike removal
-% % Larsson, Linnéa, Marcus Nyström, and Martin Stridh. "Detection of 
+% % Larsson, LinnÃ©a, Marcus NystrÃ¶m, and Martin Stridh. "Detection of 
 % % saccades and postsaccadic oscillations in the presence of smooth 
 % % pursuit." IEEE Transactions on biomedical engineering 60, no. 9 (2013): 2484-2493.
 % EH_gaze_hcoord = medfilt1(EH_gaze_hcoord,3);
@@ -128,7 +128,7 @@ long_err_smpl = cell2mat(long_err_smpl);
 % Initialization of saccade detection algorithm based on estimated baseline
 % noise in saccade velocity
 % Based on
-% Nyström, M. and Holmqvist, K., 2010. An adaptive algorithm for fixation, 
+% NystrÃ¶m, M. and Holmqvist, K., 2010. An adaptive algorithm for fixation, 
 % saccade, and glissade detection in eyetracking data. Behavior research methods, 42(1), pp.188-204.
 
 PT(1) = 100; % initial value for saccade onset detection
@@ -160,7 +160,7 @@ s_pv = arrayfun(@(s, e) max(dtheta(s:e)), s_on, s_off); % saccade peak velocity
 s_a = arrayfun(@(s,e) (mean(dtheta(s:e))).*length(s:e)/Fs, s_on, s_off); % saccade amplitude
 rmv_idx = find(sqrt(s_pv-(24+26*s_a))>5 | s_a>20); 
 % (Optional) saccade removal criteria based on peak velocity-amplitude relationship and saccade amplitude
-% Behrens, F., MacKeben, M. and Schröder-Preikschat, W., 2010. An improved
+% Behrens, F., MacKeben, M. and SchrÃ¶der-Preikschat, W., 2010. An improved
 % algorithm for automatic detection of saccades in eye movement data and 
 % for calculating saccade parameters. Behavior research methods, 42(3), pp.701-708.
 s_pv(rmv_idx)=[];s_a(rmv_idx)=[];s_on(rmv_idx)=[];s_off(rmv_idx)=[];s_d(rmv_idx)=[];
@@ -177,40 +177,36 @@ f_samples(f_rmv)=[];
 D = diff([0,diff(f_samples)==1,0]);
 f_on = f_samples(D>0);
 f_off = f_samples(D<0);
-if isempty(f_on)==0
-    f_rmv = find((f_on(2:end)-f_off(1:end-1))<5); % Minimum time between adjacent fixations to combine (11 ms in 360 Hz) as the same as minimum saccade duration
-    % But this says (75 ms) which is not accurate enough Ref: Olsen, A. (2012). The Tobii I-VT fixation filter. Tobii Technology.
-    f1= f_on(1);f2=f_off(end);
-    f_on(1)=[];f_off(end)=[];
-    f_on(f_rmv)=[];f_off(f_rmv)=[];
-    f_on = [f1 f_on];f_off = [f_off f2];
-    
-    f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
-    f_samples = cell2mat(f_samples);
-    
-    D = diff([0,diff(f_samples)==1,0]);
-    f_d = (1 + find(D<0) - find(D>0))/Fs;
-    f_rmv2 = find(f_d<0.04 | f_d>2.5); % fixation duration criteria
-    f_on(f_rmv2)=[];f_off(f_rmv2)=[];f_d(f_rmv2)=[];
-    f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
-    f_samples = cell2mat(f_samples);
-    
-    
-    rmv = [];
-    for j=1:numel(f_on)
-        C_GP_dist = sqrt((EH_gaze_hcoord(f_on(j):f_off(j))-median(EH_gaze_hcoord(f_on(j):f_off(j)))).^2+(EH_gaze_vcoord(f_on(j):f_off(j))-median(EH_gaze_vcoord(f_on(j):f_off(j)))).^2);
-        if sum(C_GP_dist>1)>11 % if the distance to the center of the fixation cluster is higher than 1 degree for more than 11 samples
-            rmv = [rmv j];
-        end
+f_rmv = find((f_on(2:end)-f_off(1:end-1))<5); % Minimum time between adjacent fixations to combine (11 ms in 360 Hz) as the same as minimum saccade duration
+% But this says (75 ms) which is not accurate enough Ref: Olsen, A. (2012). The Tobii I-VT fixation filter. Tobii Technology.
+f1= f_on(1);f2=f_off(end);
+f_on(1)=[];f_off(end)=[];
+f_on(f_rmv)=[];f_off(f_rmv)=[];
+f_on = [f1 f_on];f_off = [f_off f2];
+
+f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
+f_samples = cell2mat(f_samples);
+
+D = diff([0,diff(f_samples)==1,0]);
+f_d = (1 + find(D<0) - find(D>0))/Fs;
+f_rmv2 = find(f_d<0.04 | f_d>2.5); % fixation duration criteria
+f_on(f_rmv2)=[];f_off(f_rmv2)=[];f_d(f_rmv2)=[];
+f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
+f_samples = cell2mat(f_samples);
+
+
+rmv = [];
+for j=1:numel(f_on)
+    C_GP_dist = sqrt((EH_gaze_hcoord(f_on(j):f_off(j))-median(EH_gaze_hcoord(f_on(j):f_off(j)))).^2+(EH_gaze_vcoord(f_on(j):f_off(j))-median(EH_gaze_vcoord(f_on(j):f_off(j)))).^2);
+    if sum(C_GP_dist>1)>11 % if the distance to the center of the fixation cluster is higher than 1 degree for more than 11 samples
+        rmv = [rmv j];
     end
-    f_on(rmv)=[];f_off(rmv)=[];f_d(rmv)=[];
-    f_samples=[];
-    f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
-    f_samples = cell2mat(f_samples);
-    undef_idx = unique([undef_idx cr_rmv' f_rmv f_rmv2]);
-else
-    f_d=nan;
 end
+f_on(rmv)=[];f_off(rmv)=[];f_d(rmv)=[];
+f_samples=[];
+f_samples = arrayfun(@colon, f_on, f_off, 'Uniform', false);
+f_samples = cell2mat(f_samples);
+undef_idx = unique([undef_idx cr_rmv' f_rmv f_rmv2]);
 % -------------- End of fixation detection---------------------------------
 
 % Further considerations:
